@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Service identifier -->
+    <key>Label</key>
+    <string>com.spectrum.service</string>
+
+    <!-- Working directory -->
+    <key>WorkingDirectory</key>
+    <string>/Users/smore/Workspace/spectrum</string>
+
+    <!-- Command to run -->
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Use the full path to your Python interpreter -->
+        <!-- Adjust this path if using a virtual environment -->
+        <string>/usr/bin/python3</string>
+        <string>main.py</string>
+        <string>run</string>
+    </array>
+
+    <!-- Run at load (start immediately when loaded) -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Keep alive: restart if it exits -->
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+
+    <!-- Restart throttle: wait 10 seconds before restarting after crash -->
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+
+    <!-- Standard output log -->
+    <key>StandardOutPath</key>
+    <string>/Users/smore/Workspace/spectrum/logs/launchd_stdout.log</string>
+
+    <!-- Standard error log -->
+    <key>StandardErrorPath</key>
+    <string>/Users/smore/Workspace/spectrum/logs/launchd_stderr.log</string>
+
+    <!-- Environment variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+</dict>
+</plist>

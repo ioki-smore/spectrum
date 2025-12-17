@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectrum-anomaly-detection"
+version = "0.1.0"
+description = "A robust anomaly detection system for time-series metrics."
+authors = [
+    {name = "User", email = "user@example.com"},
+]
+dependencies = [
+    "torch",
+    "polars",
+    "numpy",
+    "pyyaml",
+    "joblib",
+    "scikit-learn",
+    "apscheduler"
+]
+requires-python = ">=3.8"
+
+[tool.setuptools]
+packages = ["core", "data", "models", "utils", "config"]
+
+[project.scripts]
+spectrum-service = "main:main"

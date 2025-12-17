@@ -1,0 +1,36 @@
+[Unit]
+Description=Spectrum Anomaly Detection Service
+Documentation=https://github.com/your-org/spectrum
+After=network.target
+
+[Service]
+Type=simple
+User=spectrum
+Group=spectrum
+WorkingDirectory=/opt/spectrum
+ExecStart=/opt/spectrum/venv/bin/python main.py run
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+# Logging
+StandardOutput=append:/opt/spectrum/logs/stdout.log
+StandardError=append:/opt/spectrum/logs/stderr.log
+
+# Environment
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/spectrum/data /opt/spectrum/logs /opt/spectrum/saved_models /opt/spectrum/results
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

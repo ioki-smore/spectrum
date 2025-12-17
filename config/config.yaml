@@ -1,0 +1,21 @@
+training:
+  start_time: "01:00" # 1 AM
+  data_window: "3d" # 3 days
+  
+detection:
+  interval_minutes: 20
+  summary_file: "results/summary.csv"
+  top_k: 3 # Number of top contributing features to report
+  
+data:
+  source_path: "data/source"
+  
+models:
+  default_type: "usad"
+  save_path: "saved_models"
+
+logging:
+  log_dir: "logs"           # Log directory
+  log_file: "spectrum.log"  # Log file name
+  retention_days: 15        # Keep logs for 15 days
+  backup_count: 5           # Number of backup files to keep

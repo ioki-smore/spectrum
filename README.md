@@ -1,117 +1,155 @@
-# Spectrum - Time Series Anomaly Detection Algorithms
+# Spectrum Anomaly Detection System
 
-A comprehensive collection of time series anomaly detection algorithms for identifying anomalous patterns in temporal data. This project provides implementations of state-of-the-art deep learning and machine learning approaches for unsupervised anomaly detection.
+A robust, configurable anomaly detection system for time-series metrics, featuring ensemble models, dynamic thresholding, and incremental learning.
 
-## Quick Start
+## Project Structure
 
-### Prerequisites
-- Python 3.8+
-- conda
+```
+spectrum/
+├── config/                 # Configuration files
+│   └── config.yaml        # Main configuration
+├── core/                   # Core logic
+│   └── manager.py         # Orchestrates training, detection, and feedback
+├── data/                   # Data handling
+│   ├── dataset/           # PyTorch Datasets
+│   │   └── timeseries.py  # Sliding window dataset
+│   ├── loader.py          # Data loading, validation, and state persistence
+│   └── processor.py       # Data normalization (StandardScaler/MinMaxScaler)
+├── deploy/                 # Deployment configurations
+│   ├── spectrum.service   # Linux systemd service
+│   ├── com.spectrum.service.plist  # macOS launchd service
+│   ├── install.sh         # Linux installation script
+│   └── uninstall.sh       # Linux uninstallation script
+├── logs/                   # Application logs (with rotation)
+├── models/                 # Anomaly detection models
+│   ├── base.py            # Abstract base model class
+│   ├── usad.py            # USAD autoencoder model
+│   ├── lstm.py            # LSTM autoencoder model
+│   ├── sr.py              # Spectral Residual model
+│   └── ensemble.py        # Ensemble with soft voting
+├── results/                # Detection outputs
+├── saved_models/           # Serialized models, processors, and version history
+│   └── versions/          # Model version backups for rollback
+├── tests/                  # Unit tests
+├── utils/                  # Utilities
+│   ├── device.py          # PyTorch device handling
+│   ├── logger.py          # Logging with rotation and retention
+│   └── thresholding.py    # POT (Peak Over Threshold) dynamic thresholding
+├── main.py                 # Main service entry point with CLI
+├── config.py               # Typed configuration (dataclasses)
+└── pyproject.toml          # Project metadata and dependencies
+```
 
-### Installation
+## Features
+
+- **Ensemble Models**: Combines USAD, LSTM Autoencoder, and Spectral Residual using soft voting with Z-score normalization.
+- **Dynamic Thresholding**: Uses Peak Over Threshold (POT) for robust anomaly detection.
+- **Multi-Interval Support**: Handles data with different sampling intervals (e.g., 5s, 10s, 1min) independently.
+- **Automated Scheduling**: 
+  - Periodic detection pipeline (configurable interval).
+  - Feedback processing loop for incremental learning.
+- **Incremental Learning**: Automatically fine-tunes models on false alarms marked by users.
+- **Model Version Management**: Automatic backups before training with rollback support.
+- **State Persistence**: Tracks processed data across service restarts.
+- **Log Rotation**: Configurable log retention (default 15 days).
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository_url>
+   cd spectrum
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   pip install .
+   ```
+   Or manually:
+   ```bash
+   pip install torch polars numpy pyyaml joblib scikit-learn apscheduler
+   ```
+
+## Configuration
+
+Edit `config/config.yaml` to adjust settings:
+
+```yaml
+training:
+  start_time: "01:00"
+  data_window: "7d"
+  
+detection:
+  interval_minutes: 5
+  summary_file: "results/summary.csv"
+  
+data:
+  source_path: "data/source"
+
+models:
+  save_path: "saved_models"
+```
+
+## Usage
+
+### Running as a Service
+
+To start the main orchestration service:
+
 ```bash
-# Clone the repository
-git clone https://github.com/DeepShield-AI/spectrum.git
-cd spectrum
-
-# Create conda environment
-conda env create -f environment.yml
-conda activate spectrum
+python main.py start
+# OR via CLI
+python main.py train --interval 1min
+python main.py detect --interval all
 ```
 
-## Datasets
+### Command Line Interface (CLI)
 
-### Supported Datasets
-We support the following public time series anomaly detection datasets:
+Manual triggers for testing or ad-hoc operations:
 
-| Dataset | Domain | Description | Dimensions | Anomaly Rate |
-|---------|--------|-------------|------------|--------------|
-| **MSL** | Space | Mars Science Laboratory telemetry | 55 | ~10.7% |
-| **SMAP** | Space | Soil Moisture Active Passive satellite | 25 | ~13.1% |
-| **SMD** | IT | Server Machine Dataset | 38 | ~4.2% |
-| **PSM** | IT | Pooled Server Metrics | 25 | ~27.9% |
-| **SWAT** | Industrial | Secure Water Treatment testbed | 51 | ~12.1% |
-| **KPI** | Web | Key Performance Indicators | 1 | Variable |
+- **Train models**:
+  ```bash
+  python main.py train --interval 1min
+  python main.py train --interval all
+  ```
 
-### Data Download & Setup
+- **Run detection**:
+  ```bash
+  python main.py detect --interval 5min
+  ```
 
-1. **Download datasets** from: `https://cloud.tsinghua.edu.cn/d/75ceadaca416485e9f09/`
-Download the `datasets.zip` file and move it to the `spectrum` directory
+### Deployment (Systemd)
 
-2. **Unzip datasets**:
+1. Copy the service file:
+   ```bash
+   sudo cp deploy/anomaly-detector.service /etc/systemd/system/
+   ```
+2. Reload daemon and enable:
+   ```bash
+   sudo systemctl daemon-reload
+   sudo systemctl enable anomaly-detector
+   sudo systemctl start anomaly-detector
+   ```
+
+## Development
+
+### Running Tests
+
+To run the unit test suite:
+
 ```bash
-unzip datasets.zip
+python -m unittest discover tests
 ```
 
-2. **Extract and organize** the data as follows:
-```
-datasets/
-└── kpi/
-    ├── raw/
-    │   ├── phase2_train.csv            # training set
-    │   ├── phase2_train.csv.zip        # raw training set
-    │   └── phase2_ground_truth.hdf     # test set
-    │   └── phase2_ground_truth.hdf.zip # raw test set
-    │   └── phase2_ground_truth.parquet # test set in Parquet format
-    └── train/                          # training set divided according to KPI ID
-    └── test/                           # test set divided according to KPI ID
-```
+## Data Format
 
-3. **Run preprocessing scripts**:
-```bash
-# KPI-specific preprocessing (with missing value handling)
-cd exp/preprocess/
+The system expects CSV files in `data/source/{interval}/` (e.g., `data/source/1min/`).
+Expected columns:
+- `timestamp`: Unix timestamp or Datetime
+- `value` (or other feature columns): Numeric metric values
+- `label` (optional): 0 for normal, 1 for anomaly (used for validation/metrics, not unsupervised training)
 
-# Manual cell execution instructions:
-# 1. After opening the kpi.ipynb, run cells sequentially
-# 2. Or use Cell -> Run All to execute all cells at once
-# 3. For step-by-step execution, use Cell -> Run Cells to run selected cells
-# 4. Monitor the output and adjust parameters as needed between cells
+## Outputs
 
-jupyter notebook kpi.ipynb  # Interactive preprocessing
-```
-
-### Data Processing Pipeline
-
-Our preprocessing pipeline includes:
-
-1. **Data Loading & Validation**
-   - Format standardization (CSV/HDF to Parquet)
-   - Schema validation and type conversion
-   - Timestamp normalization
-
-2. **Missing Value Analysis & Imputation**
-   - Gap detection and characterization
-   - Missing value statistics and visualization
-
-3. **Data Splitting & Normalization**
-   - Train/validation/test splits
-   - Min-max or z-score normalization
-   - Sliding window generation
-
-**Processing Scripts Location:**
-- `exp/preprocess/kpi.ipynb` - Interactive KPI preprocessing
-
-## Algorithms
-
-### Implemented Algorithms
-
-| Algorithm | Type | Paper | Documentation |
-|-----------|------|-------|---------------|
-| **SRCNN** | CNN-based | Spectral Residual CNN | [docs/SRCNN.md](docs/SRCNN.md) |
-
-### Algorithm Categories
-
-- **Deep Autoencoders**: USAD, DAGMM, Donut
-- **Spectral Methods**: SRCNN, SaVAE-SR
-- **Temporal Convolution**: ModernTCN
-- **Clustering-based**: DCdetector, DAGMM
-
-## Results & Evaluation
-
-### Evaluation Metrics
-- **Precision**: True positives / (True positives + False positives)
-- **Recall**: True positives / (True positives + False negatives)
-- **F1-Score**: Harmonic mean of precision and recall
-- **AUC-ROC**: Area under the ROC curve
-- **AUC-PR**: Area under the Precision-Recall curve
+- **Summary**: `results/summary.csv` contains high-level detection results.
+- **Details**: `results/{interval}_details.csv` contains point-wise anomaly scores and labels.
