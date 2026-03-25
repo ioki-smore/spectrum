@@ -12,3 +12,4 @@ test_results/
 repro_workspace/
 integration_tests/
 saved_models/
+logs/
