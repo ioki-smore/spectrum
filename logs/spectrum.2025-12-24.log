@@ -1,0 +1,24 @@
+2025-12-24 15:07:05,543 - spectrum.main - INFO - Triggering manual training for interval: all
+2025-12-24 15:07:05,545 - spectrum.core.manager - INFO - Discovered intervals: ['10s', '30s', '5s']
+2025-12-24 15:07:05,545 - spectrum.core.manager - INFO - [10s] Starting training...
+2025-12-24 15:07:06,089 - spectrum.data.loader - WARNING - File 20251209_metrics-10s.csv non-compliant: 40.90% data loss (Actual: 5106, Expected: 8640). Discarding.
+2025-12-24 15:07:06,089 - spectrum.main - ERROR - Unhandled exception: '<' not supported between instances of 'int' and 'str'
+2025-12-24 15:51:05,638 - spectrum.main - INFO - Triggering manual training for interval: all
+2025-12-24 15:51:05,639 - spectrum.core.manager - INFO - Discovered intervals: ['10s', '30s', '5s']
+2025-12-24 15:51:05,639 - spectrum.core.manager - INFO - [10s] Starting training...
+2025-12-24 15:51:06,148 - spectrum.data.loader - WARNING - 20251209_metrics-10s.csv: 40.9% loss (got 5106, need 8640)
+2025-12-24 15:51:06,149 - spectrum.core.manager - ERROR - [10s] Found 6 compliant files, need 7
+2025-12-24 15:51:06,149 - spectrum.core.manager - INFO - [30s] Starting training...
+2025-12-24 15:51:06,156 - spectrum.data.loader - WARNING - 20251209_metrics-30s.csv: 40.9% loss (got 1702, need 2880)
+2025-12-24 15:51:06,156 - spectrum.core.manager - ERROR - [30s] Found 6 compliant files, need 7
+2025-12-24 15:55:58,445 - spectrum.main - INFO - Starting Spectrum Anomaly Detection Service...
+2025-12-24 15:55:58,445 - spectrum.core.manager - INFO - Discovered intervals: ['10s', '30s', '5s']
+2025-12-24 15:55:58,445 - spectrum.main - INFO - Scheduled anomaly pipeline every 5 minutes
+2025-12-24 15:55:58,445 - spectrum.main - INFO - Scheduled feedback processing every 5 minutes
+2025-12-24 15:56:51,639 - spectrum.main - INFO - Received shutdown signal. Stopping services...
+2025-12-24 15:56:52,586 - spectrum.main - INFO - Received shutdown signal. Stopping services...
+2025-12-24 15:56:52,587 - spectrum.main - ERROR - Unhandled exception: Scheduler is not running
+2025-12-24 17:20:40,279 - spectrum.main - INFO - Triggering manual training for interval: all
+2025-12-24 17:20:40,757 - spectrum.main - ERROR - Unhandled exception: cannot import name 'SpectrumError' from 'utils.errors' (/Users/smore/Workspace/spectrum/utils/errors.py)
+2025-12-24 17:20:49,815 - spectrum.main - INFO - Triggering manual training for interval: all
+2025-12-24 17:20:50,180 - spectrum.main - ERROR - Unhandled exception: cannot import name 'SpectrumError' from 'utils.errors' (/Users/smore/Workspace/spectrum/utils/errors.py)

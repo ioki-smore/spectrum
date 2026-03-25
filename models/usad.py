@@ -1,18 +1,19 @@
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import polars as pl
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-import polars as pl
-from typing import Any
-import numpy as np
 
-from pathlib import Path
-
-from .base import BaseModel
-from utils.device import get_device, to_device
-from utils.logger import get_logger
 from data.dataset.timeseries import TimeSeriesDataset
+from utils.errors import Result, Ok, Err, ErrorCode
+from utils.logger import get_logger
+from .base import BaseModel
 
 logger = get_logger("models.usad")
+
 
 class Encoder(nn.Module):
     def __init__(self, in_size, latent_size):
@@ -30,6 +31,7 @@ class Encoder(nn.Module):
         out = self.linear3(out)
         z = self.relu(out)
         return z
+
 
 class Decoder(nn.Module):
     def __init__(self, latent_size, out_size):
@@ -49,6 +51,7 @@ class Decoder(nn.Module):
         w = self.sigmoid(out)
         return w
 
+
 class USADModel(nn.Module):
     def __init__(self, w_size, z_size):
         super().__init__()
@@ -61,12 +64,8 @@ class USADModel(nn.Module):
         w1 = self.decoder1(z)
         w2 = self.decoder2(z)
         w3 = self.decoder2(self.encoder(w1))
-        loss1 = 1 / n * torch.mean((batch - w1) ** 2) + (1 - 1 / n) * torch.mean(
-            (batch - w3) ** 2
-        )
-        loss2 = 1 / n * torch.mean((batch - w2) ** 2) - (1 - 1 / n) * torch.mean(
-            (batch - w3) ** 2
-        )
+        loss1 = 1 / n * torch.mean((batch - w1) ** 2) + (1 - 1 / n) * torch.mean((batch - w3) ** 2)
+        loss2 = 1 / n * torch.mean((batch - w2) ** 2) - (1 - 1 / n) * torch.mean((batch - w3) ** 2)
         # Check for numerical instability
         if torch.isnan(loss1) or torch.isnan(loss2):
             raise RuntimeError("NaN loss detected during training step.")
@@ -79,44 +78,41 @@ class USADModel(nn.Module):
         w3 = self.decoder2(self.encoder(w1))
         return w1, w2, w3
 
+
 class USAD(BaseModel):
     def __init__(self, name: str, config: Any, input_dim: int):
         super().__init__(name, config)
-        
+
         self.window_size = self.get_param('window_size', 64)
-        self.w_size = input_dim * self.window_size 
-        
+        self.w_size = input_dim * self.window_size
+
         self.feature_dim = input_dim
         self.z_size = self.get_param('latent_size', 10)
         self.epochs = self.get_param('epochs', 10)
         self.batch_size = self.get_param('batch_size', 128)
-        self.device = get_device()
-        
+        self.error_check_window = int(self.get_param('usad_error_check_window', 0))
+        self.device = 'cpu'
+
         # Calculate flattened input size
         self.input_size = self.window_size * self.feature_dim
-        
+
         self.model = USADModel(self.input_size, self.z_size).to(self.device)
         self.optimizer1 = torch.optim.Adam(
-            list(self.model.encoder.parameters()) + list(self.model.decoder1.parameters())
-        )
+            list(self.model.encoder.parameters()) + list(self.model.decoder1.parameters()))
         self.optimizer2 = torch.optim.Adam(
-            list(self.model.encoder.parameters()) + list(self.model.decoder2.parameters())
-        )
+            list(self.model.encoder.parameters()) + list(self.model.decoder2.parameters()))
 
-    def fit(self, train_data: pl.DataFrame):
+    def fit(self, train_data: pl.DataFrame) -> Result[None]:
         logger.info(f"Training USAD model {self.name}...")
-        try:
-            dataset = TimeSeriesDataset(train_data, self.window_size)
-        except ValueError as e:
-            logger.error(f"Failed to create dataset for training: {e}")
-            return
+        # FIXME: ValueError will bubble up
+        dataset = TimeSeriesDataset(train_data, self.window_size)
 
         if len(dataset) == 0:
             logger.warning("Dataset is empty after windowing. Increase data size or decrease window size.")
-            return
+            return Ok(None)
 
         train_loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True, drop_last=True)
-        
+
         self.model.train()
         for epoch in range(self.epochs):
             losses1 = []
@@ -125,61 +121,66 @@ class USAD(BaseModel):
                 # batch is a list [window_tensor, (optional labels)]
                 # window_tensor shape: (batch, window, features)
                 batch_data = batch[0]
-                batch_data = batch_data.view(batch_data.size(0), -1) # Flatten
-                batch_data = to_device(batch_data, self.device)
-                
+                batch_data = batch_data.view(batch_data.size(0), -1)  # Flatten
+                batch_data = batch_data.to(self.device)
+
                 # Train AE1
-                try:
-                    loss1, _ = self.model.training_step(batch_data, epoch + 1)
-                    loss1.backward()
-                    self.optimizer1.step()
-                    self.optimizer1.zero_grad()
-                    
-                    # Train AE2
-                    _, loss2 = self.model.training_step(batch_data, epoch + 1)
-                    loss2.backward()
-                    self.optimizer2.step()
-                    self.optimizer2.zero_grad()
-                except RuntimeError as e:
-                    logger.error(f"Training interrupted due to numerical error at epoch {epoch+1}: {e}")
-                    return
-                
+                # FIXME: RuntimeError will bubble up
+                # Note: Two forward passes are intentional in USAD — Phase 2
+                # needs the encoder already updated by Phase 1's gradient step.
+                self.optimizer1.zero_grad()
+                loss1, _ = self.model.training_step(batch_data, epoch + 1)
+                loss1.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                self.optimizer1.step()
+
+                # Train AE2 (encoder now updated by Phase 1)
+                self.optimizer2.zero_grad()
+                _, loss2 = self.model.training_step(batch_data, epoch + 1)
+                loss2.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                self.optimizer2.step()
+
                 losses1.append(loss1.item())
                 losses2.append(loss2.item())
-                
+
             if (epoch + 1) % 5 == 0 or (epoch + 1) == self.epochs:
-                logger.info(f"Epoch [{epoch+1}/{self.epochs}], Loss1: {np.mean(losses1):.4f}, Loss2: {np.mean(losses2):.4f}")
+                logger.info(
+                    f"Epoch [{epoch + 1}/{self.epochs}], Loss1: {np.mean(losses1):.4f}, Loss2: {np.mean(losses2):.4f}")
 
         # Compute and store per-feature error statistics (Mean/Std) on training data
         # This is needed for Z-score normalization in get_contribution
         self._compute_feature_stats(dataset)
+        return Ok(None)
 
     def _compute_feature_stats(self, dataset):
         logger.info(f"Computing feature error statistics for {self.name}...")
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
         all_contribs = []
-        
+
         self.model.eval()
         with torch.no_grad():
             for batch in loader:
                 batch_data = batch[0]
                 batch_data_view = batch_data.view(batch_data.size(0), -1)
-                batch_data_view = to_device(batch_data_view, self.device)
-                
+                batch_data_view = batch_data_view.to(self.device)
+
                 w1 = self.model.decoder1(self.model.encoder(batch_data_view))
                 w2 = self.model.decoder2(self.model.encoder(w1))
-                
+
                 diff1 = (batch_data_view - w1) ** 2
                 diff2 = (batch_data_view - w2) ** 2
                 diff = 0.5 * diff1 + 0.5 * diff2
-                
+
                 diff_reshaped = diff.view(batch_data.size(0), self.window_size, self.feature_dim)
-                contrib = torch.mean(diff_reshaped, dim=1) # (batch, features)
+                if self.error_check_window > 0 and self.error_check_window < self.window_size:
+                    diff_reshaped = diff_reshaped[:, -self.error_check_window:, :]
+                contrib = torch.mean(diff_reshaped, dim=1)  # (batch, features)
                 all_contribs.append(contrib.cpu().numpy())
-        
+
         if all_contribs:
-            all_contribs = np.concatenate(all_contribs, axis=0) # (n_samples, n_features)
-            
+            all_contribs = np.concatenate(all_contribs, axis=0)  # (n_samples, n_features)
+
             # Learn mean/std per feature
             self.feature_stats = {}
             for i in range(self.feature_dim):
@@ -193,119 +194,186 @@ class USAD(BaseModel):
             logger.warning("No data for computing feature stats.")
             self.feature_stats = {}
 
-    def save(self, path: str):
+    def save(self, path: str) -> Result[None]:
         # Extend save to include feature_stats
         import torch
-        state = {
-            "model_state": self.model.state_dict(),
-            "feature_stats": getattr(self, 'feature_stats', {})
-        }
+        # FIXME: Exception will bubble up
+        state = {"model_state": self.model.state_dict(), "feature_stats": getattr(self, 'feature_stats', {}),
+            "error_check_window": self.error_check_window}
         torch.save(state, path)
+        return Ok(None)
 
-    def load(self, path: str):
+    def load(self, path: str) -> Result[None]:
         import torch
         if not Path(path).exists():
-             raise FileNotFoundError(f"Model file not found at {path}")
-        
-        try:
-            # PyTorch 2.6+ requires weights_only=False for loading dicts with numpy types
-            state = torch.load(path, map_location=self.device, weights_only=False)
-            # Check if it's new format with feature_stats
-            if "model_state" in state:
-                self.model.load_state_dict(state["model_state"])
-                self.feature_stats = state.get("feature_stats", {})
-            else:
-                # Old format (just state dict)
-                self.model.load_state_dict(state)
-                self.feature_stats = {}
-        except Exception as e:
-            logger.error(f"Failed to load USAD model: {e}")
+            return Err(ErrorCode.MODEL_NOT_FOUND)
 
-    def predict(self, data: pl.DataFrame, alpha: float = 0.5, beta: float = 0.5) -> np.ndarray:
+        # FIXME: Exception will bubble up
+        # PyTorch 2.6+ requires weights_only=False for loading dicts with numpy types
+        state = torch.load(path, map_location=self.device, weights_only=False)
+        # Check if it's new format with feature_stats
+        if "model_state" in state:
+            self.model.load_state_dict(state["model_state"])
+            self.feature_stats = state.get("feature_stats", {})
+            self.error_check_window = state.get("error_check_window", self.error_check_window)
+        else:
+            # Old format (just state dict)
+            self.model.load_state_dict(state)
+            self.feature_stats = {}
+        return Ok(None)
+
+    def predict(self, data: pl.DataFrame, alpha: float = 0.5, beta: float = 0.5) -> Result[np.ndarray]:
         self.model.eval()
-        try:
-            dataset = TimeSeriesDataset(data, self.window_size)
-        except ValueError as e:
-            logger.error(f"Failed to create dataset for prediction: {e}")
-            return np.array([])
+        # FIXME: ValueError will bubble up
+        dataset = TimeSeriesDataset(data, self.window_size)
 
         if len(dataset) == 0:
-             logger.warning("Data too short for prediction window.")
-             return np.array([])
+            logger.warning("Data too short for prediction window.")
+            return Ok(np.array([]))
 
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
-        
+
         results = []
         with torch.no_grad():
             for batch in loader:
                 batch_data = batch[0]
                 batch_data = batch_data.view(batch_data.size(0), -1)
-                batch_data = to_device(batch_data, self.device)
-                
+                batch_data = batch_data.to(self.device)
+
                 w1 = self.model.decoder1(self.model.encoder(batch_data))
                 w2 = self.model.decoder2(self.model.encoder(w1))
-                
-                # Anomaly score
-                score = alpha * torch.mean((batch_data - w1) ** 2, dim=1) + beta * torch.mean((batch_data - w2) ** 2, dim=1)
-                results.append(score.cpu().numpy())
-                
-        if not results:
-            return np.array([])
-            
-        return np.concatenate(results)
 
-    def get_contribution(self, data: pl.DataFrame) -> np.ndarray:
+                # Anomaly score
+                diff1 = (batch_data - w1) ** 2
+                diff2 = (batch_data - w2) ** 2
+
+                if self.error_check_window > 0 and self.error_check_window < self.window_size:
+                    # Only check last N steps for error (reduces trailing FPs)
+                    diff1 = diff1.view(batch_data.size(0), self.window_size, self.feature_dim)
+                    diff2 = diff2.view(batch_data.size(0), self.window_size, self.feature_dim)
+                    diff1 = diff1[:, -self.error_check_window:, :]
+                    diff2 = diff2[:, -self.error_check_window:, :]
+                    diff1 = diff1.reshape(batch_data.size(0), -1)
+                    diff2 = diff2.reshape(batch_data.size(0), -1)
+
+                score = alpha * torch.mean(diff1, dim=1) + beta * torch.mean(diff2, dim=1)
+                results.append(score.cpu().numpy())
+
+        if not results:
+            return Ok(np.array([]))
+
+        return Ok(np.concatenate(results))
+
+    def predict_and_contribute(self, data: pl.DataFrame, alpha: float = 0.5, beta: float = 0.5) -> Result[tuple]:
+        """Single forward pass returning both scores and contributions."""
+        self.model.eval()
+        dataset = TimeSeriesDataset(data, self.window_size)
+
+        if len(dataset) == 0:
+            return Ok((np.array([]), np.array([])))
+
+        loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
+        score_results = []
+        contrib_results = []
+        feature_stats = getattr(self, 'feature_stats', {})
+
+        with torch.no_grad():
+            for batch in loader:
+                batch_data = batch[0]
+                batch_flat = batch_data.view(batch_data.size(0), -1).to(self.device)
+
+                # Single shared forward pass
+                encoded = self.model.encoder(batch_flat)
+                w1 = self.model.decoder1(encoded)
+                w2 = self.model.decoder2(self.model.encoder(w1))
+
+                diff1 = (batch_flat - w1) ** 2
+                diff2 = (batch_flat - w2) ** 2
+
+                # --- Scores ---
+                s_diff1, s_diff2 = diff1, diff2
+                if self.error_check_window > 0 and self.error_check_window < self.window_size:
+                    s_diff1 = s_diff1.view(batch_data.size(0), self.window_size, self.feature_dim)
+                    s_diff2 = s_diff2.view(batch_data.size(0), self.window_size, self.feature_dim)
+                    s_diff1 = s_diff1[:, -self.error_check_window:, :].reshape(batch_data.size(0), -1)
+                    s_diff2 = s_diff2[:, -self.error_check_window:, :].reshape(batch_data.size(0), -1)
+                score = alpha * torch.mean(s_diff1, dim=1) + beta * torch.mean(s_diff2, dim=1)
+                score_results.append(score.cpu().numpy())
+
+                # --- Contributions ---
+                diff = 0.5 * diff1 + 0.5 * diff2
+                diff_reshaped = diff.view(batch_data.size(0), self.window_size, self.feature_dim)
+                if self.error_check_window > 0 and self.error_check_window < self.window_size:
+                    diff_reshaped = diff_reshaped[:, -self.error_check_window:, :]
+                contrib = torch.mean(diff_reshaped, dim=1)
+
+                if feature_stats:
+                    contrib_np = contrib.cpu().numpy()
+                    norm_list = []
+                    for i in range(self.feature_dim):
+                        mean, std = feature_stats.get(i, (0.0, 1.0))
+                        norm_list.append((contrib_np[:, i] - mean) / std)
+                    contrib_results.append(np.stack(norm_list, axis=1))
+                else:
+                    contrib_results.append(contrib.cpu().numpy())
+
+        if not score_results:
+            return Ok((np.array([]), np.array([])))
+
+        return Ok((np.concatenate(score_results), np.concatenate(contrib_results)))
+
+    def get_contribution(self, data: pl.DataFrame) -> Result[np.ndarray]:
         """
         Calculates reconstruction error contribution per feature.
         Returns Z-scores based on learned stats.
         """
         self.model.eval()
-        try:
-            dataset = TimeSeriesDataset(data, self.window_size)
-        except ValueError:
-            return np.array([])
+        # FIXME: ValueError will bubble up
+        dataset = TimeSeriesDataset(data, self.window_size)
 
         if len(dataset) == 0:
-             return np.array([])
+            return Ok(np.array([]))
 
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
         results = []
-        
+
         feature_stats = getattr(self, 'feature_stats', {})
-        
+
         with torch.no_grad():
             for batch in loader:
                 batch_data = batch[0]
                 batch_data_view = batch_data.view(batch_data.size(0), -1)
-                batch_data_view = to_device(batch_data_view, self.device)
-                
+                batch_data_view = batch_data_view.to(self.device)
+
                 w1 = self.model.decoder1(self.model.encoder(batch_data_view))
                 w2 = self.model.decoder2(self.model.encoder(w1))
-                
+
                 diff1 = (batch_data_view - w1) ** 2
                 diff2 = (batch_data_view - w2) ** 2
                 diff = 0.5 * diff1 + 0.5 * diff2
-                
+
                 diff_reshaped = diff.view(batch_data.size(0), self.window_size, self.feature_dim)
-                contrib = torch.mean(diff_reshaped, dim=1) # (batch, features)
-                
+                if self.error_check_window > 0 and self.error_check_window < self.window_size:
+                    diff_reshaped = diff_reshaped[:, -self.error_check_window:, :]
+                contrib = torch.mean(diff_reshaped, dim=1)  # (batch, features)
+
                 # Normalize to Z-scores if stats are available
                 if feature_stats:
-                     contrib_np = contrib.cpu().numpy()
-                     norm_contrib_list = []
-                     for i in range(self.feature_dim):
-                         mean, std = feature_stats.get(i, (0.0, 1.0))
-                         # Z-score
-                         z = (contrib_np[:, i] - mean) / std
-                         norm_contrib_list.append(z)
-                     
-                     norm_contrib = np.stack(norm_contrib_list, axis=1)
-                     results.append(norm_contrib)
+                    contrib_np = contrib.cpu().numpy()
+                    norm_contrib_list = []
+                    for i in range(self.feature_dim):
+                        mean, std = feature_stats.get(i, (0.0, 1.0))
+                        # Z-score
+                        z = (contrib_np[:, i] - mean) / std
+                        norm_contrib_list.append(z)
+
+                    norm_contrib = np.stack(norm_contrib_list, axis=1)
+                    results.append(norm_contrib)
                 else:
                     # Fallback to raw error if no stats (shouldn't happen if trained)
                     results.append(contrib.cpu().numpy())
-                
+
         if not results:
-            return np.array([])
-            
-        return np.concatenate(results)
+            return Ok(np.array([]))
+
+        return Ok(np.concatenate(results))

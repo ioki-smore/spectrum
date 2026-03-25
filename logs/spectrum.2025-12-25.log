@@ -1,0 +1,2 @@
+2025-12-25 11:10:13,745 - spectrum.main - INFO - Triggering manual training for interval: all
+2025-12-25 11:10:14,599 - spectrum.main - ERROR - Unhandled exception: cannot import name 'SpectrumError' from 'utils.errors' (/Users/smore/Workspace/spectrum/utils/errors.py)

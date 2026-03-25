@@ -1,21 +1,96 @@
 training:
-  start_time: "01:00" # 1 AM
-  data_window: "3d" # 3 days
+  start_time: "01:00"    # Daily training time
+  data_window: 3         # Days of training data required
+  interval: 720          # Training interval in minutes (12 hours)
+  feedback_interval: 5   # Feedback processing interval in minutes
   
 detection:
-  interval_minutes: 20
+  interval_minutes: 20    # Detection frequency
+  timeout: 1200          # Timeout in seconds (20 minutes). Aborts if exceeded.
   summary_file: "results/summary.csv"
-  top_k: 3 # Number of top contributing features to report
-  
+  top_k: 3               # Top contributing features to report
 data:
   source_path: "data/source"
   
 models:
-  default_type: "usad"
   save_path: "saved_models"
+  
+  # Enabled models: usad, lstm, sr, historical (empty = all)
+  enabled_models:
+    - historical
+    
+  # Historical threshold parameters
+  # Historical Threshold Model - Adaptive Multi-Strategy (OPTIMIZED)
+  historical_smoothing_method: "median"
+  historical_smoothing_window_min: 3
+  historical_smoothing_window_max: 9
+  historical_robust_max_percentile: 95.0  # Balanced spike filtering
+  historical_stationary_margin: 1.10      # Balanced threshold margin
+  historical_mad_multiplier: 3.5
+  historical_trending_k_base: 1.2
+  historical_trending_k_max: 4.0
+  historical_ac1_low_threshold: 0.2
+  historical_ac1_high_threshold: 0.6
+  historical_score_tier1: 0.1
+  historical_score_tier2: 0.3
+  historical_score_tier1_weight: 0.5
+  historical_score_tier3_weight: 1.5
+  # Detection threshold (applied in predict): 0.06 recommended
+  
+  # Common parameters
+  window_size: 64
+  epochs: 10
+  batch_size: 128
+  
+  # USAD parameters
+  usad_latent_size: 10
+  usad_error_check_window: 5   # Only check last N steps for error (reduces trailing FPs)
+  
+  # LSTM parameters
+  lstm_hidden_dim: 32
+  lstm_num_layers: 1
+  
+  # SR parameters
+  sr_filter_size: 3
+  
+  # GSR_AE parameters
+  gsr_ae_window_size: 64
+  gsr_ae_latent_dim: 5
+  gsr_ae_sigma: 3.0
+  gsr_ae_norm: false
+  gsr_ae_c: 3.0
+  gsr_ae_amp_threshold: 2.0           # Amplitude threshold for burst detection
+  gsr_ae_amp_check_window: 5          # Check last N steps for amplitude (reduces smearing)
+  gsr_ae_th_lo_q: 0.05               # Lower threshold quantile (conservative)
+  gsr_ae_suppression_factor: 0.05     # Noise suppression strength
+  # Check only CPU features (0, 1) for bursts to avoid Memory drift FPs
+  gsr_ae_amp_feature_indices: [0, 1]
+
+  # POT threshold parameters
+  pot_risk: 0.0001
+  pot_level: 0.98
+
+postprocessing:
+  enabled: true
+  direction:
+    enabled: true
+    direction: "up"
+  amplitude:
+    enabled: true
+    threshold: 80.0             # Absolute threshold (used when relative_threshold = 0)
+    relative_threshold: 1.3     # value > baseline * 1.3 (takes precedence over threshold)
+    baseline_window: 61         # Rolling-median window for local baseline
+    features: []                # Empty = all
+  frequency:
+    enabled: false
+    window_size: 10
+    threshold: 0.7
+    features: []
 
 logging:
-  log_dir: "logs"           # Log directory
-  log_file: "spectrum.log"  # Log file name
-  retention_days: 15        # Keep logs for 15 days
-  backup_count: 5           # Number of backup files to keep
+  log_dir: "logs"
+  log_file: "RueAI.log"
+  rotation: "midnight"   # Rotate daily
+  retention: 7      # Keep 7 days
+  max_total_size: 100 # Max total size of all logs in MB
+  level: "INFO"          # DEBUG, INFO, WARNING, ERROR

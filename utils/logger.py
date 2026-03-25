@@ -1,157 +1,191 @@
+"""
+Logging utilities for RueAI.
+
+Usage:
+    from utils.logger import get_logger
+    logger = get_logger("module.name")  # -> RueAI.module.name
+"""
+
 import logging
 import logging.handlers
-import sys
 import os
-import time
+import re
 from pathlib import Path
-from typing import Optional
+from typing import List, TYPE_CHECKING
 
-# Flag to track if root logger is configured
-_root_configured = False
+from utils.errors import Result, Ok
 
-# Default values (will be overridden by config if available)
-_DEFAULT_LOG_DIR = "logs"
-_DEFAULT_LOG_FILE = "spectrum.log"
-# TODO：7天一轮转
-_DEFAULT_RETENTION_DAYS = 15
-_DEFAULT_MAX_BYTES = 20 * 1024 * 1024  # 20MB
-_DEFAULT_BACKUP_COUNT = 5
+if TYPE_CHECKING:
+    from config import LoggingConfig
+
+# Constants
+_ROOT = "RueAI"
 
 
-class TimedRotatingFileHandlerWithCleanup(logging.handlers.TimedRotatingFileHandler):
+def setup(
+        log_dir: str,
+        log_file: str,
+        rotation: str,
+        retention: int,
+        max_total_size: int,
+        level: int
+) -> Result[None]:
     """
-    Extended TimedRotatingFileHandler that also cleans up old log files
-    based on retention_days setting.
-    """
-    # TODO：文件名加时间戳
-    def __init__(self, filename, when='midnight', interval=1, backupCount=0,
-                 encoding=None, delay=False, utc=False, atTime=None,
-                 retention_days: int = 15):
-        super().__init__(filename, when, interval, backupCount, encoding, delay, utc, atTime)
-        self.retention_days = retention_days
-    
-    def doRollover(self):
-        super().doRollover()
-        self._cleanup_old_logs()
-    
-    def _cleanup_old_logs(self):
-        """Remove log files older than retention_days."""
-        if self.retention_days <= 0:
-            return
-            
-        log_dir = Path(self.baseFilename).parent
-        log_name = Path(self.baseFilename).name
-        cutoff_time = time.time() - (self.retention_days * 24 * 3600)
-        
-        try:
-            for f in log_dir.glob(f"{log_name}*"):
-                if f.is_file() and f.stat().st_mtime < cutoff_time:
-                    f.unlink()
-        except Exception:
-            pass  # Silently ignore cleanup errors
-
-
-def setup_logger(
-    name: str = "spectrum",
-    log_dir: str = _DEFAULT_LOG_DIR,
-    log_file: str = _DEFAULT_LOG_FILE,
-    retention_days: int = _DEFAULT_RETENTION_DAYS,
-    max_bytes: int = _DEFAULT_MAX_BYTES,
-    backup_count: int = _DEFAULT_BACKUP_COUNT,
-    level: int = logging.INFO
-) -> logging.Logger:
-    """
-    Setup a logger with the given name.
-    
-    The root 'spectrum' logger is configured once with:
-    - File output only (no console)
-    - Daily rotation at midnight
-    - Automatic cleanup of logs older than retention_days
-    
-    Child loggers (e.g., 'spectrum.data.loader') inherit from root and use propagation.
-    """
-    global _root_configured
-    
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    
-    # Only configure the root 'spectrum' logger once
-    if name == "spectrum" and not _root_configured:
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-
-        # Create log directory
-        log_path = Path(log_dir) / log_file
-        try:
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Use TimedRotatingFileHandler for daily rotation with cleanup
-            file_handler = TimedRotatingFileHandlerWithCleanup(
-                filename=str(log_path),
-                when='midnight',
-                interval=1,
-                backupCount=backup_count,
-                encoding='utf-8',
-                retention_days=retention_days
-            )
-            file_handler.setFormatter(formatter)
-            file_handler.suffix = "%Y-%m-%d"  # Log file suffix format
-            logger.addHandler(file_handler)
-            
-        except PermissionError:
-            sys.stderr.write(f"Permission denied: Cannot write to log file {log_path}. Logging disabled.\n")
-        except Exception as e:
-            sys.stderr.write(f"Failed to setup file logging to {log_path}: {e}. Logging disabled.\n")
-        
-        _root_configured = True
-    
-    return logger
-
-
-def configure_logging(log_config) -> None:
-    """
-    Reconfigure the root logger with settings from LoggingConfig.
-    Should be called after config is loaded.
+    Configure the root RueAI logger.
     
     Args:
-        log_config: LoggingConfig instance with log_dir, log_file, retention_days, etc.
+        rotation: Rotation interval ('midnight', 'H', 'D', 'M', 'S')
+        retention: Days of logs to keep.
+        max_total_size: Max total size of all logs in MB.
     """
-    global _root_configured
-    
-    root_logger = logging.getLogger("spectrum")
-    
-    # Remove existing handlers
-    for handler in root_logger.handlers[:]:
-        handler.close()
-        root_logger.removeHandler(handler)
-    
-    _root_configured = False
-    
-    # Re-setup with new config
-    setup_logger(
-        name="spectrum",
-        log_dir=log_config.log_dir,
-        log_file=log_config.log_file,
-        retention_days=log_config.retention_days,
-        max_bytes=log_config.max_bytes,
-        backup_count=log_config.backup_count
+    root = logging.getLogger(_ROOT)
+
+    # Clear existing handlers
+    for h in root.handlers[:]:
+        h.close()
+        root.removeHandler(h)
+
+    root.setLevel(level)
+
+    # Setup file handler
+    log_path = Path(log_dir) / log_file
+    # NOTE: Will raise OSError if failed
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Calculate backupCount based on retention and rotation
+    backup_count = retention
+    rotation_upper = rotation.upper()
+
+    if rotation_upper == 'H':
+        backup_count = retention * 24
+    elif rotation_upper == 'M':
+        backup_count = retention * 24 * 60
+    elif rotation_upper == 'S':
+        backup_count = retention * 24 * 60 * 60
+
+    file_handler = logging.handlers.TimedRotatingFileHandler(
+        str(log_path),
+        when=rotation,
+        interval=1,
+        backupCount=backup_count,
+        encoding='utf-8'
+    )
+
+    # Configure naming format: filename.YYYY-MM-DD.log
+    # Default suffix is %Y-%m-%d_%H-%M-%S or similar depending on 'when'
+    # We enforce %Y-%m-%d for 'midnight' or 'D'
+    if rotation_upper in ('MIDNIGHT', 'D'):
+        file_handler.suffix = "%Y-%m-%d"
+        # Regex to match the suffix for deletion
+        file_handler.extMatch = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+    # Custom namer to change filename.log.YYYY-MM-DD -> filename.YYYY-MM-DD.log
+    def custom_namer(default_name: str) -> str:
+        # default_name is the full path of the rotated file (e.g., /path/to/RueAI.log.2025-01-01)
+        default_path = Path(default_name)
+        dir_path = default_path.parent
+        filename = default_path.name
+
+        # log_file is the configured log filename (e.g., RueAI.log)
+        # We need to extract the suffix added by TimedRotatingFileHandler
+        # The pattern is usually: log_file + "." + suffix
+        base_filename = Path(log_file).name
+
+        if filename.startswith(base_filename + "."):
+            suffix = filename[len(base_filename) + 1:]
+            # If original file ends with .log, insert suffix before it
+            if base_filename.endswith(".log"):
+                new_filename = f"{base_filename[:-4]}.{suffix}.log"
+                return str(dir_path / new_filename)
+            else:
+                return str(dir_path / f"{base_filename}.{suffix}")
+
+        return default_name
+
+    file_handler.namer = custom_namer
+
+    # Custom rotator to enforce total size limit
+    def custom_rotator(source: str, dest: str) -> None:
+        # 1. Perform the default rotation (rename)
+        if os.path.exists(source):
+            os.rename(source, dest)
+
+        # 2. Enforce total size limit
+        if max_total_size > 0:
+            limit_bytes = max_total_size * 1024 * 1024
+            base_name = Path(log_file).stem  # e.g. RueAI
+
+            # Find all relevant log files
+            # Matches: RueAI.log, RueAI.YYYY-MM-DD.log...
+            # We look for files starting with the stem
+            files: List[Path] = []
+            for f in log_path.parent.glob(f"{base_name}*"):
+                # Double check it belongs to this log file series
+                # Should start with base_name and contain log_file suffix or be the log file
+                if f.name.startswith(base_name):
+                    files.append(f)
+
+            # Sort by modification time (oldest first)
+            files.sort(key=lambda file: file.stat().st_mtime)
+
+            total_size = sum(file.stat().st_size for file in files)
+
+            if total_size <= limit_bytes:
+                return
+
+            # Delete the oldest files until under limit
+            # Exclude the current active log file (dest is the newly rotated file, source was the active one)
+            # The current active file is actually recreated empty after rotation by the handler, 
+            # but 'log_path' points to it.
+            current_log = log_path.resolve()
+
+            deleted_size = 0
+            for f in files:
+                # SAFETY: don't delete current active log
+                if f.resolve() == current_log:
+                    continue
+                # NOTE: Will raise OSError if failed
+                size = f.stat().st_size
+                try:
+                    f.unlink()
+                except OSError:
+                    f.rename(f.parent / f"deprecated_{f.name}.old")
+                deleted_size += size
+                if total_size - deleted_size <= limit_bytes:
+                    break
+
+    file_handler.rotator = custom_rotator
+    file_handler.setLevel(level)
+    file_handler.setFormatter(logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    ))
+    root.addHandler(file_handler)
+
+    return Ok(None)
+
+
+def configure_logging(cfg: "LoggingConfig") -> Result[None]:
+    """Reconfigure logging from LoggingConfig dataclass."""
+    level = getattr(logging, cfg.level.upper(), logging.INFO)
+
+    return setup(
+        log_dir=cfg.log_dir,
+        log_file=cfg.log_file,
+        rotation=cfg.rotation,
+        retention=cfg.retention,
+        max_total_size=cfg.max_total_size,
+        level=level,
     )
 
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Get a child logger under the 'spectrum' namespace.
+    Get a logger under the RueAI namespace.
     
-    Usage:
-        logger = get_logger(__name__)  # e.g., 'spectrum.data.loader'
-    
-    If name doesn't start with 'spectrum.', it will be prefixed.
+    Args:
+        name: Logger name (e.g., "core.manager" -> "RueAI.core.manager")
     """
-    if not name.startswith("spectrum"):
-        name = f"spectrum.{name}"
+    if not name.startswith(_ROOT):
+        name = f"{_ROOT}.{name}"
     return logging.getLogger(name)
-
-
-# Initialize root logger with defaults (will be reconfigured when config loads)
-logger = setup_logger()

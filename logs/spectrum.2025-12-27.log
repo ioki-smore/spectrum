@@ -1,0 +1,571 @@
+2025-12-27 17:25:53,741 - spectrum.main - INFO - Starting Spectrum Anomaly Detection Service...
+2025-12-27 17:25:54,406 - spectrum.main - ERROR - Unhandled exception: cannot import name 'SpectrumError' from 'utils.errors' (/Users/smore/Workspace/spectrum/utils/errors.py)
+2025-12-27 17:35:25,555 - spectrum.main - INFO - Starting Spectrum Anomaly Detection Service...
+2025-12-27 17:35:25,982 - spectrum.main - ERROR - Unhandled exception
+Traceback (most recent call last):
+  File "/Users/smore/Workspace/spectrum/main.py", line 209, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/Users/smore/Workspace/spectrum/main.py", line 195, in main
+    code = service.start()
+  File "/Users/smore/Workspace/spectrum/main.py", line 79, in start
+    self.manager.run_pipeline,
+    ^^^^^^^^^^^^
+  File "/Users/smore/Workspace/spectrum/main.py", line 38, in manager
+    from core.manager import Manager
+  File "/Users/smore/Workspace/spectrum/core/__init__.py", line 3, in <module>
+    from .manager import IntervalManager, Manager, get_manager, reset_manager
+  File "/Users/smore/Workspace/spectrum/core/manager.py", line 19, in <module>
+    from data.loader import DataLoader
+  File "/Users/smore/Workspace/spectrum/data/__init__.py", line 4, in <module>
+    from .processor import DataProcessor
+  File "/Users/smore/Workspace/spectrum/data/processor.py", line 8, in <module>
+    from utils.errors import ErrorCode, Result, SpectrumError
+ImportError: cannot import name 'SpectrumError' from 'utils.errors' (/Users/smore/Workspace/spectrum/utils/errors.py)
+2025-12-27 17:36:41,100 - spectrum.main - INFO - Starting Spectrum Anomaly Detection Service...
+2025-12-27 17:36:41,635 - spectrum.core.manager - INFO - Discovered intervals: ['10s', '30s', '5s']
+2025-12-27 17:36:41,635 - spectrum.main - INFO - Scheduled anomaly pipeline every 5 minutes
+2025-12-27 17:36:41,636 - spectrum.main - INFO - Scheduled feedback processing every 5 minutes
+2025-12-27 17:41:41,644 - spectrum.core.manager - INFO - [10s] Starting training...
+2025-12-27 17:41:42,300 - spectrum.data.loader - WARNING - 20251209_metrics-10s.csv: 40.9% loss (got 5106, need 8640)
+2025-12-27 17:41:42,301 - spectrum.core.manager - ERROR - [10s] Found 6 compliant files, need 7
+2025-12-27 17:41:42,301 - spectrum.core.manager - INFO - [30s] Starting training...
+2025-12-27 17:41:42,314 - spectrum.data.loader - WARNING - 20251209_metrics-30s.csv: 40.9% loss (got 1702, need 2880)
+2025-12-27 17:41:42,314 - spectrum.core.manager - ERROR - [30s] Found 6 compliant files, need 7
+2025-12-27 17:41:42,314 - spectrum.core.manager - INFO - [5s] Running detection...
+2025-12-27 17:46:37,264 - spectrum.main - INFO - Received shutdown signal. Stopping services...
+2025-12-27 17:47:32,705 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:47:32,705 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:47:32,706 - spectrum.models.ensemble - ERROR - Error fitting model USAD in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,706 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:47:32,706 - spectrum.models.ensemble - ERROR - Error fitting model LSTM in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,706 - spectrum.models.sr - INFO - Training SR model SR (learning stats)...
+2025-12-27 17:47:32,706 - spectrum.models.ensemble - ERROR - Error fitting model SR in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,706 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:47:32,706 - spectrum.models.ensemble - ERROR - Error predicting with model USAD in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,706 - spectrum.models.ensemble - ERROR - Error predicting with model LSTM in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,706 - spectrum.models.ensemble - ERROR - Error predicting with model SR in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,706 - spectrum.utils.thresholding - WARNING - Empty scores provided for POT. Returning infinity.
+2025-12-27 17:47:32,706 - spectrum.experiment - INFO - Calculated Threshold: inf
+2025-12-27 17:47:32,706 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:47:32,706 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:47:32,706 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:47:32,706 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:47:32,707 - spectrum.models.ensemble - ERROR - Error predicting with model USAD in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,707 - spectrum.models.ensemble - ERROR - Error predicting with model LSTM in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,707 - spectrum.models.ensemble - ERROR - Error predicting with model SR in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,707 - spectrum.experiment - WARNING - Empty scores for chunk
+2025-12-27 17:47:32,707 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 0, Actual Anomalies: 0.0
+2025-12-27 17:47:32,707 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:47:32,707 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:47:32,707 - spectrum.models.ensemble - ERROR - Error predicting with model USAD in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,707 - spectrum.models.ensemble - ERROR - Error predicting with model LSTM in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,707 - spectrum.models.ensemble - ERROR - Error predicting with model SR in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,707 - spectrum.experiment - WARNING - Empty scores for chunk
+2025-12-27 17:47:32,707 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 0, Actual Anomalies: 0.0
+2025-12-27 17:47:32,707 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:47:32,707 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:47:32,707 - spectrum.models.ensemble - ERROR - Error predicting with model USAD in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,708 - spectrum.models.ensemble - ERROR - Error predicting with model LSTM in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,708 - spectrum.models.ensemble - ERROR - Error predicting with model SR in ensemble: 'Result' object has no attribute 'columns'
+2025-12-27 17:47:32,708 - spectrum.experiment - WARNING - Empty scores for chunk
+2025-12-27 17:47:32,708 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0.0
+2025-12-27 17:51:54,139 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:51:54,140 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:51:54,360 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6107, Loss2: -0.4632
+2025-12-27 17:51:54,511 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.6176, Loss2: -0.5585
+2025-12-27 17:51:54,511 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:51:54,517 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:51:54,522 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4680, Std: 0.4159
+2025-12-27 17:51:54,522 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:51:55,185 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.4241
+2025-12-27 17:51:55,804 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.2848
+2025-12-27 17:51:55,804 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:51:55,878 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:51:55,960 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.2743, Std: 0.2700
+2025-12-27 17:51:55,960 - spectrum.models.sr - INFO - Training SR model SR (learning stats)...
+2025-12-27 17:51:55,974 - spectrum.models.sr - INFO - SR stats learned for 5 features.
+2025-12-27 17:51:55,980 - spectrum.models.ensemble - INFO - Model SR score stats - Mean: 0.0000, Std: 0.3634
+2025-12-27 17:51:55,980 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:51:56,069 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 5.058309 (Initial t: 2.143308, Peaks: 17, Shape: -0.3108, Scale: 1.1210)
+2025-12-27 17:51:56,070 - spectrum.experiment - INFO - Calculated Threshold: 5.058309
+2025-12-27 17:51:56,070 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:51:56,070 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:51:56,070 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:51:56,070 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:51:56,097 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:51:56,097 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 97, Actual Anomalies: 0
+2025-12-27 17:51:56,097 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:51:56,098 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:51:56,123 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:51:56,123 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:51:56,123 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:51:56,123 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:51:56,123 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:51:56,147 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:51:56,148 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:52:53,331 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:52:53,331 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:52:53,503 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6082, Loss2: -0.4530
+2025-12-27 17:52:53,623 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.6062, Loss2: -0.5432
+2025-12-27 17:52:53,623 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:52:53,628 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:52:53,633 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4595, Std: 0.4055
+2025-12-27 17:52:53,633 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:52:54,243 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3332
+2025-12-27 17:52:54,842 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.1758
+2025-12-27 17:52:54,842 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:52:54,919 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:52:54,997 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1678, Std: 0.1828
+2025-12-27 17:52:54,997 - spectrum.models.sr - INFO - Training SR model SR (learning stats)...
+2025-12-27 17:52:55,013 - spectrum.models.sr - INFO - SR stats learned for 5 features.
+2025-12-27 17:52:55,019 - spectrum.models.ensemble - INFO - Model SR score stats - Mean: 0.0000, Std: 0.3634
+2025-12-27 17:52:55,019 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:52:55,112 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 4.946800 (Initial t: 2.021576, Peaks: 17, Shape: -0.3056, Scale: 1.1135)
+2025-12-27 17:52:55,112 - spectrum.experiment - INFO - Calculated Threshold: 4.946800
+2025-12-27 17:52:55,112 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:52:55,112 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:52:55,112 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:52:55,113 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:52:55,141 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:52:55,141 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 108, Actual Anomalies: 0
+2025-12-27 17:52:55,141 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:52:55,141 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:52:55,166 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:52:55,166 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:52:55,166 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:52:55,166 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:52:55,167 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:52:55,193 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:52:55,193 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:53:31,826 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:53:31,826 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:53:32,049 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6056, Loss2: -0.4626
+2025-12-27 17:53:32,194 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.5838, Loss2: -0.5252
+2025-12-27 17:53:32,194 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:53:32,200 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:53:32,205 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4441, Std: 0.3985
+2025-12-27 17:53:32,205 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:53:32,900 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.4100
+2025-12-27 17:53:33,639 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.2583
+2025-12-27 17:53:33,639 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:53:33,730 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:53:33,806 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.2483, Std: 0.2289
+2025-12-27 17:53:33,806 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:53:33,860 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 45751.834635
+2025-12-27 17:53:33,902 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 17692.949219
+2025-12-27 17:53:33,903 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:53:33,920 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: 0.0001, Std: 0.2917
+2025-12-27 17:53:33,920 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:53:34,024 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.654176 (Initial t: 1.281893, Peaks: 17, Shape: -2.5190, Scale: 3.4568)
+2025-12-27 17:53:34,024 - spectrum.experiment - INFO - Calculated Threshold: 2.654176
+2025-12-27 17:53:34,024 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:53:34,024 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:53:34,024 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:53:34,024 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:34,053 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:53:34,053 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 119, Actual Anomalies: 0
+2025-12-27 17:53:34,053 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:53:34,053 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:34,080 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:53:34,080 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:53:34,080 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:53:34,080 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:53:34,081 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:34,108 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:53:34,109 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:53:44,418 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:53:44,419 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:53:44,607 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.5885, Loss2: -0.4458
+2025-12-27 17:53:44,728 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.5776, Loss2: -0.5172
+2025-12-27 17:53:44,728 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:53:44,732 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:53:44,737 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4395, Std: 0.3978
+2025-12-27 17:53:44,737 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:53:45,279 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3631
+2025-12-27 17:53:45,804 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.2334
+2025-12-27 17:53:45,804 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:53:45,871 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:53:45,938 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.2215, Std: 0.2934
+2025-12-27 17:53:45,938 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:53:45,975 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 53025.845052
+2025-12-27 17:53:46,010 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 22406.656250
+2025-12-27 17:53:46,010 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:53:46,024 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: 0.4003, Std: 0.2968
+2025-12-27 17:53:46,024 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:53:46,113 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.355679 (Initial t: 1.039659, Peaks: 17, Shape: -3.4549, Scale: 4.5468)
+2025-12-27 17:53:46,113 - spectrum.experiment - INFO - Calculated Threshold: 2.355679
+2025-12-27 17:53:46,113 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:53:46,113 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:53:46,113 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:53:46,113 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:46,137 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:53:46,137 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 119, Actual Anomalies: 0
+2025-12-27 17:53:46,137 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:53:46,138 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:46,161 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:53:46,161 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:53:46,161 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:53:46,161 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:53:46,161 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:46,184 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:53:46,185 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:53:51,496 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:53:51,496 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:53:51,619 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6221, Loss2: -0.4725
+2025-12-27 17:53:51,722 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.6138, Loss2: -0.5487
+2025-12-27 17:53:51,722 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:53:51,727 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:53:51,731 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4611, Std: 0.3995
+2025-12-27 17:53:51,731 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:53:52,256 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3339
+2025-12-27 17:53:52,777 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.1545
+2025-12-27 17:53:52,777 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:53:52,844 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:53:52,911 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1474, Std: 0.1899
+2025-12-27 17:53:52,911 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:53:52,948 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 64202.626302
+2025-12-27 17:53:52,983 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 37455.175781
+2025-12-27 17:53:52,983 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:53:52,996 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: -0.3997, Std: 0.2752
+2025-12-27 17:53:52,996 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:53:53,088 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 3.315448 (Initial t: 1.871751, Peaks: 17, Shape: -2.4558, Scale: 3.5455)
+2025-12-27 17:53:53,088 - spectrum.experiment - INFO - Calculated Threshold: 3.315448
+2025-12-27 17:53:53,088 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:53:53,088 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:53:53,088 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:53:53,089 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:53,112 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:53:53,113 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 119, Actual Anomalies: 0
+2025-12-27 17:53:53,113 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:53:53,113 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:53,136 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:53:53,136 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:53:53,136 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:53:53,136 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:53:53,136 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:53,159 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:53:53,160 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:53:57,172 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:53:57,172 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:53:57,295 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6280, Loss2: -0.4734
+2025-12-27 17:53:57,399 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.6386, Loss2: -0.5722
+2025-12-27 17:53:57,399 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:53:57,404 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:53:57,409 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4963, Std: 0.3984
+2025-12-27 17:53:57,409 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:53:58,012 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3716
+2025-12-27 17:53:58,587 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.1742
+2025-12-27 17:53:58,587 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:53:58,660 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:53:58,730 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1609, Std: 0.2085
+2025-12-27 17:53:58,730 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:53:58,771 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 54530.915365
+2025-12-27 17:53:58,809 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 20622.526042
+2025-12-27 17:53:58,809 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:53:58,823 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: -0.4001, Std: 0.3100
+2025-12-27 17:53:58,823 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:53:58,914 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.956494 (Initial t: 1.625057, Peaks: 17, Shape: -2.6108, Scale: 3.4761)
+2025-12-27 17:53:58,914 - spectrum.experiment - INFO - Calculated Threshold: 2.956494
+2025-12-27 17:53:58,914 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:53:58,914 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:53:58,914 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:53:58,915 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:58,939 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:53:58,939 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 119, Actual Anomalies: 0
+2025-12-27 17:53:58,939 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:53:58,939 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:58,964 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:53:58,964 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:53:58,964 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:53:58,964 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:53:58,965 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:53:58,989 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:53:58,989 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:54:02,843 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:54:02,843 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:54:02,968 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6006, Loss2: -0.4522
+2025-12-27 17:54:03,076 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.6081, Loss2: -0.5451
+2025-12-27 17:54:03,076 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:54:03,081 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:54:03,085 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4572, Std: 0.4087
+2025-12-27 17:54:03,085 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:54:03,637 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.4151
+2025-12-27 17:54:04,173 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.2195
+2025-12-27 17:54:04,173 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:54:04,247 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:54:04,321 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.2084, Std: 0.2257
+2025-12-27 17:54:04,321 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:54:04,371 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 55498.219401
+2025-12-27 17:54:04,411 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 28319.078451
+2025-12-27 17:54:04,411 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:54:04,426 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: -0.4000, Std: 0.3018
+2025-12-27 17:54:04,426 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:54:04,522 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.440132 (Initial t: 1.122497, Peaks: 17, Shape: -2.6290, Scale: 3.4641)
+2025-12-27 17:54:04,522 - spectrum.experiment - INFO - Calculated Threshold: 2.440132
+2025-12-27 17:54:04,522 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:54:04,522 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:54:04,522 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:54:04,522 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:54:04,547 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:54:04,548 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 135, Actual Anomalies: 0
+2025-12-27 17:54:04,548 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:54:04,548 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:54:04,572 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:54:04,572 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:54:04,572 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:54:04,572 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:54:04,572 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:54:04,596 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:54:04,596 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:54:07,733 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:54:07,733 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:54:07,856 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6114, Loss2: -0.4578
+2025-12-27 17:54:07,958 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.6505, Loss2: -0.5845
+2025-12-27 17:54:07,958 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:54:07,962 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:54:07,967 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4971, Std: 0.3998
+2025-12-27 17:54:07,967 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:54:08,589 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3956
+2025-12-27 17:54:09,134 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.2116
+2025-12-27 17:54:09,134 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:54:09,203 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:54:09,271 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1966, Std: 0.2207
+2025-12-27 17:54:09,271 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:54:09,309 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 42436.959310
+2025-12-27 17:54:09,346 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 16602.055990
+2025-12-27 17:54:09,346 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:54:09,360 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: 0.4001, Std: 0.3367
+2025-12-27 17:54:09,360 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:54:09,449 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.626548 (Initial t: 1.409071, Peaks: 17, Shape: -2.4379, Scale: 2.9681)
+2025-12-27 17:54:09,449 - spectrum.experiment - INFO - Calculated Threshold: 2.626548
+2025-12-27 17:54:09,449 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:54:09,449 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:54:09,449 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:54:09,450 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:54:09,474 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:54:09,474 - spectrum.experiment - INFO - Chunk 1 Stats - Anomalies Found: 149, Actual Anomalies: 0
+2025-12-27 17:54:09,474 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:54:09,474 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:54:09,498 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:54:09,498 - spectrum.experiment - INFO - Chunk 2 Stats - Anomalies Found: 237, Actual Anomalies: 237
+2025-12-27 17:54:09,498 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:54:09,498 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:54:09,498 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:54:09,522 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:54:09,522 - spectrum.experiment - INFO - Chunk 3 Stats - Anomalies Found: 0, Actual Anomalies: 0
+2025-12-27 17:57:34,385 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:57:34,385 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:57:34,649 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6034, Loss2: -0.4574
+2025-12-27 17:57:34,821 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.5909, Loss2: -0.5312
+2025-12-27 17:57:34,821 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:57:34,827 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:57:34,834 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4439, Std: 0.4067
+2025-12-27 17:57:34,834 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:57:35,747 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3841
+2025-12-27 17:57:36,714 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.1876
+2025-12-27 17:57:36,714 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:57:36,849 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:57:36,970 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1735, Std: 0.2177
+2025-12-27 17:57:36,971 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:57:37,106 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 68176.000651
+2025-12-27 17:57:37,196 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 33912.786784
+2025-12-27 17:57:37,196 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:57:37,230 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: 0.4000, Std: 0.3007
+2025-12-27 17:57:37,230 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:57:37,446 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.779193 (Initial t: 1.464387, Peaks: 17, Shape: -2.2554, Scale: 2.9655)
+2025-12-27 17:57:37,447 - spectrum.experiment - INFO - Calculated Threshold (POT): 2.779193
+2025-12-27 17:57:37,447 - spectrum.experiment - INFO - Calculated Threshold (Q0.995): 2.730378
+2025-12-27 17:57:37,447 - spectrum.experiment - INFO - Using Threshold (Hybrid=max): 2.779193
+2025-12-27 17:57:37,642 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.990151 (Initial t: 1.925275, Peaks: 17, Shape: -1.3098, Scale: 0.0851)
+2025-12-27 17:57:37,670 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 0.868102 (Initial t: 0.793616, Peaks: 17, Shape: -1.0612, Scale: 0.0793)
+2025-12-27 17:57:37,684 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.243658 (Initial t: 1.233362, Peaks: 17, Shape: -1.2202, Scale: 0.0126)
+2025-12-27 17:57:37,685 - spectrum.experiment - INFO - USAD threshold (hybrid): 1.990151
+2025-12-27 17:57:37,685 - spectrum.experiment - INFO - LSTM threshold (hybrid): 0.868102
+2025-12-27 17:57:37,685 - spectrum.experiment - INFO - GSR_AE threshold (hybrid): 1.243658
+2025-12-27 17:57:37,685 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:57:37,685 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:57:37,685 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:57:37,695 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:57:37,831 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:57:37,832 - spectrum.experiment - INFO - Chunk 1 Stats - ENS=119, VOTE=12, USAD=0, LSTM=237, GSR=12, GT=0
+2025-12-27 17:57:37,832 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:57:37,834 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:57:37,941 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:57:37,941 - spectrum.experiment - INFO - Chunk 2 Stats - ENS=237, VOTE=237, USAD=237, LSTM=237, GSR=237, GT=237
+2025-12-27 17:57:37,941 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:57:37,941 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:57:37,942 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:57:38,038 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:57:38,039 - spectrum.experiment - INFO - Chunk 3 Stats - ENS=0, VOTE=0, USAD=0, LSTM=0, GSR=1, GT=0
+2025-12-27 17:58:07,309 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:58:07,309 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:58:07,464 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6034, Loss2: -0.4574
+2025-12-27 17:58:07,567 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.5909, Loss2: -0.5312
+2025-12-27 17:58:07,567 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:58:07,571 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:58:07,576 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4439, Std: 0.4067
+2025-12-27 17:58:07,576 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:58:08,111 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3841
+2025-12-27 17:58:08,633 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.1876
+2025-12-27 17:58:08,633 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:58:08,700 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:58:08,767 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1735, Std: 0.2177
+2025-12-27 17:58:08,767 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:58:08,813 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 68176.000651
+2025-12-27 17:58:08,849 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 33912.786784
+2025-12-27 17:58:08,849 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:58:08,864 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: 0.4000, Std: 0.3007
+2025-12-27 17:58:08,864 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:58:08,956 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.779193 (Initial t: 1.464387, Peaks: 17, Shape: -2.2554, Scale: 2.9655)
+2025-12-27 17:58:08,956 - spectrum.experiment - INFO - Calculated Threshold (POT): 2.779193
+2025-12-27 17:58:08,956 - spectrum.experiment - INFO - Calculated Threshold (Q0.995): 2.730378
+2025-12-27 17:58:08,956 - spectrum.experiment - INFO - Using Threshold (Hybrid=max): 2.779193
+2025-12-27 17:58:09,049 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.990151 (Initial t: 1.925275, Peaks: 17, Shape: -1.3098, Scale: 0.0851)
+2025-12-27 17:58:09,063 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 0.868102 (Initial t: 0.793616, Peaks: 17, Shape: -1.0612, Scale: 0.0793)
+2025-12-27 17:58:09,075 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.243658 (Initial t: 1.233362, Peaks: 17, Shape: -1.2202, Scale: 0.0126)
+2025-12-27 17:58:09,075 - spectrum.experiment - INFO - USAD threshold (hybrid): 1.990151
+2025-12-27 17:58:09,075 - spectrum.experiment - INFO - LSTM threshold (hybrid): 0.868102
+2025-12-27 17:58:09,075 - spectrum.experiment - INFO - GSR_AE threshold (hybrid): 1.243658
+2025-12-27 17:58:09,075 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:58:09,075 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:58:09,075 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:58:09,075 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:58:09,136 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:58:09,136 - spectrum.experiment - INFO - Chunk 1 Stats - ENS=119, VOTE=12, USAD=0, LSTM=237, GSR=12, GT=0
+2025-12-27 17:58:09,136 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:58:09,137 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:58:09,194 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:58:09,194 - spectrum.experiment - INFO - Chunk 2 Stats - ENS=237, VOTE=237, USAD=237, LSTM=237, GSR=237, GT=237
+2025-12-27 17:58:09,194 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:58:09,194 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:58:09,194 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:58:09,247 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:58:09,247 - spectrum.experiment - INFO - Chunk 3 Stats - ENS=0, VOTE=0, USAD=0, LSTM=0, GSR=1, GT=0
+2025-12-27 17:58:13,683 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:58:13,683 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:58:13,802 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6034, Loss2: -0.4574
+2025-12-27 17:58:13,905 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.5909, Loss2: -0.5312
+2025-12-27 17:58:13,905 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:58:13,910 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:58:13,914 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4439, Std: 0.4067
+2025-12-27 17:58:13,914 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:58:14,441 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3841
+2025-12-27 17:58:15,149 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.1876
+2025-12-27 17:58:15,149 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:58:15,222 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:58:15,294 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1735, Std: 0.2177
+2025-12-27 17:58:15,294 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:58:15,336 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 68176.000651
+2025-12-27 17:58:15,374 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 33912.786784
+2025-12-27 17:58:15,374 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:58:15,390 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: 0.4000, Std: 0.3007
+2025-12-27 17:58:15,390 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:58:15,484 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.779193 (Initial t: 1.464387, Peaks: 17, Shape: -2.2554, Scale: 2.9655)
+2025-12-27 17:58:15,484 - spectrum.experiment - INFO - Calculated Threshold (POT): 2.779193
+2025-12-27 17:58:15,484 - spectrum.experiment - INFO - Calculated Threshold (Q0.995): 2.730378
+2025-12-27 17:58:15,484 - spectrum.experiment - INFO - Using Threshold (Hybrid=max): 2.779193
+2025-12-27 17:58:15,579 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.990151 (Initial t: 1.925275, Peaks: 17, Shape: -1.3098, Scale: 0.0851)
+2025-12-27 17:58:15,592 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 0.868102 (Initial t: 0.793616, Peaks: 17, Shape: -1.0612, Scale: 0.0793)
+2025-12-27 17:58:15,603 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.243658 (Initial t: 1.233362, Peaks: 17, Shape: -1.2202, Scale: 0.0126)
+2025-12-27 17:58:15,604 - spectrum.experiment - INFO - USAD threshold (hybrid): 1.990151
+2025-12-27 17:58:15,604 - spectrum.experiment - INFO - LSTM threshold (hybrid): 0.868102
+2025-12-27 17:58:15,604 - spectrum.experiment - INFO - GSR_AE threshold (hybrid): 1.243658
+2025-12-27 17:58:15,604 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:58:15,604 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:58:15,604 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:58:15,604 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:58:15,655 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:58:15,656 - spectrum.experiment - INFO - Chunk 1 Stats - ENS=119, VOTE=12, USAD=0, LSTM=237, GSR=12, GT=0
+2025-12-27 17:58:15,656 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:58:15,656 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:58:15,705 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:58:15,705 - spectrum.experiment - INFO - Chunk 2 Stats - ENS=237, VOTE=237, USAD=237, LSTM=237, GSR=237, GT=237
+2025-12-27 17:58:15,705 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:58:15,705 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:58:15,705 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:58:15,754 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:58:15,754 - spectrum.experiment - INFO - Chunk 3 Stats - ENS=0, VOTE=0, USAD=0, LSTM=0, GSR=1, GT=0
+2025-12-27 17:59:43,468 - spectrum.experiment - INFO - Training Ensemble...
+2025-12-27 17:59:43,468 - spectrum.models.usad - INFO - Training USAD model USAD...
+2025-12-27 17:59:43,621 - spectrum.models.usad - INFO - Epoch [5/10], Loss1: 0.6034, Loss2: -0.4574
+2025-12-27 17:59:43,723 - spectrum.models.usad - INFO - Epoch [10/10], Loss1: 0.5909, Loss2: -0.5312
+2025-12-27 17:59:43,723 - spectrum.models.usad - INFO - Computing feature error statistics for USAD...
+2025-12-27 17:59:43,729 - spectrum.models.usad - INFO - USAD feature stats computed for 5 features.
+2025-12-27 17:59:43,733 - spectrum.models.ensemble - INFO - Model USAD score stats - Mean: 0.4439, Std: 0.4067
+2025-12-27 17:59:43,733 - spectrum.models.lstm - INFO - Training LSTM model LSTM...
+2025-12-27 17:59:44,268 - spectrum.models.lstm - INFO - LSTM Epoch [5/10], Loss: 0.3841
+2025-12-27 17:59:44,787 - spectrum.models.lstm - INFO - LSTM Epoch [10/10], Loss: 0.1876
+2025-12-27 17:59:44,787 - spectrum.models.lstm - INFO - Computing feature error statistics for LSTM...
+2025-12-27 17:59:44,854 - spectrum.models.lstm - INFO - LSTM feature stats computed.
+2025-12-27 17:59:44,922 - spectrum.models.ensemble - INFO - Model LSTM score stats - Mean: 0.1735, Std: 0.2177
+2025-12-27 17:59:44,922 - spectrum.models.gsr_ae - INFO - Training GSR-AE model GSR_AE...
+2025-12-27 17:59:44,967 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [5/10], Loss: 68176.000651
+2025-12-27 17:59:45,002 - spectrum.models.gsr_ae - INFO - GSR-AE Epoch [10/10], Loss: 33912.786784
+2025-12-27 17:59:45,002 - spectrum.models.gsr_ae - INFO - Computing feature error statistics for GSR_AE...
+2025-12-27 17:59:45,017 - spectrum.models.ensemble - INFO - Model GSR_AE score stats - Mean: 0.4000, Std: 0.3007
+2025-12-27 17:59:45,017 - spectrum.experiment - INFO - Calculating threshold using POT on training data...
+2025-12-27 17:59:45,107 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 2.779193 (Initial t: 1.464387, Peaks: 17, Shape: -2.2554, Scale: 2.9655)
+2025-12-27 17:59:45,107 - spectrum.experiment - INFO - Calculated Threshold (POT): 2.779193
+2025-12-27 17:59:45,107 - spectrum.experiment - INFO - Calculated Threshold (Q0.995): 2.730378
+2025-12-27 17:59:45,107 - spectrum.experiment - INFO - Using Threshold (Hybrid=max): 2.779193
+2025-12-27 17:59:45,197 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.990151 (Initial t: 1.925275, Peaks: 17, Shape: -1.3098, Scale: 0.0851)
+2025-12-27 17:59:45,210 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 0.868102 (Initial t: 0.793616, Peaks: 17, Shape: -1.0612, Scale: 0.0793)
+2025-12-27 17:59:45,220 - spectrum.utils.thresholding - INFO - POT Threshold calculated: 1.243658 (Initial t: 1.233362, Peaks: 17, Shape: -1.2202, Scale: 0.0126)
+2025-12-27 17:59:45,220 - spectrum.experiment - INFO - USAD threshold (hybrid): 1.990151
+2025-12-27 17:59:45,220 - spectrum.experiment - INFO - LSTM threshold (hybrid): 0.868102
+2025-12-27 17:59:45,220 - spectrum.experiment - INFO - GSR_AE threshold (hybrid): 1.243658
+2025-12-27 17:59:45,220 - spectrum.experiment - INFO - Starting periodic detection (every 5 minutes)...
+2025-12-27 17:59:45,220 - spectrum.experiment - INFO - Fault Window: 1766223082992 - 1766223382992
+2025-12-27 17:59:45,220 - spectrum.experiment - INFO - 
+--- Processing Chunk 1: 1766222782992 to 1766223082992 ---
+2025-12-27 17:59:45,221 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:59:45,268 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766222846982 - 1766223082982
+2025-12-27 17:59:45,268 - spectrum.experiment - INFO - Chunk 1 Stats - ENS=119, VOTE=12, USAD=0, LSTM=237, GSR=12, GT=0
+2025-12-27 17:59:45,268 - spectrum.experiment - INFO - 
+--- Processing Chunk 2: 1766223082992 to 1766223382992 ---
+2025-12-27 17:59:45,269 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:59:45,314 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223146982 - 1766223382982
+2025-12-27 17:59:45,314 - spectrum.experiment - INFO - Chunk 2 Stats - ENS=237, VOTE=237, USAD=237, LSTM=237, GSR=237, GT=237
+2025-12-27 17:59:45,314 - spectrum.experiment - INFO -   -> Chunk contains fault window: 1766223082992 - 1766223382992
+2025-12-27 17:59:45,314 - spectrum.experiment - INFO - 
+--- Processing Chunk 3: 1766223382992 to 1766223682992 ---
+2025-12-27 17:59:45,314 - spectrum.experiment - INFO - Chunk Size: 300
+2025-12-27 17:59:45,360 - spectrum.experiment - INFO -   Chunk Valid TS Range: 1766223446982 - 1766223682982
+2025-12-27 17:59:45,360 - spectrum.experiment - INFO - Chunk 3 Stats - ENS=0, VOTE=0, USAD=0, LSTM=0, GSR=1, GT=0

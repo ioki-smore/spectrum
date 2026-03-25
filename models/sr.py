@@ -1,71 +1,115 @@
-import torch
-import torch.nn as nn
-import torch.fft
-import polars as pl
-import numpy as np
+from pathlib import Path
 from typing import Any
 
-from pathlib import Path
-
-from .base import BaseModel
-from utils.device import get_device, to_device
-from utils.logger import get_logger
-from data.dataset.timeseries import TimeSeriesDataset
+import numpy as np
+import polars as pl
+import torch
+import torch.fft
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
+
+from data.dataset.timeseries import TimeSeriesDataset
+from utils.errors import Result, Ok, Err, ErrorCode
+from utils.logger import get_logger
+from .base import BaseModel
 
 logger = get_logger("models.sr")
 
+
 class SR(BaseModel):
+    """
+    Spectral Residual (SR) model for Time-Series Anomaly Detection.
+    Reference: "Time-Series Anomaly Detection Service at Microsoft" (Ren et al., KDD 2019)
+    """
+
     def __init__(self, name: str, config: Any, input_dim: int):
         super().__init__(name, config)
-        
+
         self.window_size = self.get_param('window_size', 64)
-        self.batch_size = self.get_param('batch_size', 128)
-        self.device = get_device()
-        self.q = self.get_param('sr_filter_size', 3) 
+        self.batch_size = self.get_param('batch_size', 256)
+        self.device = 'cpu'
         
-        # Dictionary to store mean/std for each feature index
-        self.stats = {} 
+        # Paper uses q=3 for the local average filter
+        self.q = self.get_param('sr_filter_size', 3)
+        
+        # Number of points to extend the sequence by to reduce boundary effects
+        # The paper suggests extending the sequence.
+        self.extend_points = self.get_param('extend_points', 5)
+
+        # Statistics for normalization (mean, std) per feature
+        self.stats = {}
+
+    def _extend_series(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Extend the sequence to reduce boundary effects during FFT.
+        Formula: x(n+1) = x(n) + g, where g is the average slope of the last few points.
+        
+        Args:
+            x: (batch, window, features)
+            
+        Returns:
+            x_ext: (batch, window + extend_points, features)
+        """
+        B, W, C = x.shape
+        if self.extend_points <= 0:
+            return x
+
+        # Calculate slope based on last few points (e.g., last 5 or less if window is small)
+        lookback = min(5, W - 1)
+        
+        p1 = x[:, -1, :]
+        p2 = x[:, -1 - lookback, :]
+        
+        # Average slope
+        slope = (p1 - p2) / lookback
+        
+        # Generate extension indices: 1, 2, ..., extend_points
+        # Shape need to broadcast: (1, extend, 1)
+        steps = torch.arange(1, self.extend_points + 1, device=x.device).float().view(1, -1, 1) # (1, ext, 1)
+        
+        # Extension: p1 (batch, 1, feat) + slope (batch, 1, feat) * steps (1, ext, 1)
+        # Result: (batch, ext, feat)
+        extension = p1.unsqueeze(1) + slope.unsqueeze(1) * steps
+        
+        return torch.cat([x, extension], dim=1)
 
     def _compute_saliency(self, data: pl.DataFrame) -> np.ndarray:
         """
         Computes the Spectral Residual Saliency Map for the given data.
-        Returns:
-            np.ndarray: Shape (n_samples, n_features)
         """
-        try:
-            dataset = TimeSeriesDataset(data, self.window_size)
-        except ValueError as e:
-            logger.error(f"Failed to create dataset for SR: {e}")
-            return np.array([])
-
+        dataset = TimeSeriesDataset(data, self.window_size)
         if len(dataset) == 0:
             return np.array([])
 
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=False)
         results = []
-        
+
         with torch.no_grad():
             for batch in loader:
-                x = batch[0] # (batch, window, features)
-                x = to_device(x, self.device)
+                x = batch[0]  # (batch, window, features)
+                x = x.to(self.device)
                 
-                # FFT on time dimension (dim=1)
-                transf = torch.fft.fft(x, dim=1)
-                real = transf.real
-                imag = transf.imag
-                
-                mag = torch.sqrt(real**2 + imag**2)
-                phase = torch.atan2(imag, real)
-                
+                # 1. Extend the series
+                x_ext = self._extend_series(x)
+
+                # 2. FFT
+                transf = torch.fft.fft(x_ext, dim=1)
+                mag = transf.abs()
+                phase = transf.angle()
+
+                # 3. Log Amplitude
                 eps = 1e-8
                 log_mag = torch.log(mag + eps)
-                
-                # Spectral Residual
-                log_mag_perm = log_mag.permute(0, 2, 1) 
+
+                # 4. Spectral Residual
+                # Average log magnitude with qxq filter (1D avg pooling)
+                # Input to avg_pool1d: (N, C, L). Here C is really features, L is time.
+                # We need to filter along time.
+                # x shape: (batch, time, features) -> permute to (batch, features, time)
+                log_mag_perm = log_mag.permute(0, 2, 1)
                 
                 pad = self.q // 2
-                avg_log_mag = nn.functional.avg_pool1d(
+                avg_log_mag = F.avg_pool1d(
                     log_mag_perm, 
                     kernel_size=self.q, 
                     stride=1, 
@@ -73,113 +117,110 @@ class SR(BaseModel):
                     count_include_pad=False
                 )
                 
+                # Fix potential size mismatch if any
                 if avg_log_mag.shape[-1] != log_mag_perm.shape[-1]:
-                     avg_log_mag = nn.functional.interpolate(avg_log_mag, size=log_mag_perm.shape[-1])
+                    avg_log_mag = F.interpolate(avg_log_mag, size=log_mag_perm.shape[-1])
 
-                avg_log_mag = avg_log_mag.permute(0, 2, 1)
+                spectral_residual = log_mag_perm - avg_log_mag
                 
-                spectral_residual = log_mag - avg_log_mag
-                
+                # Permute back
+                spectral_residual = spectral_residual.permute(0, 2, 1)
+
+                # 5. Inverse FFT
                 sr_exp = torch.exp(spectral_residual)
-                real_new = sr_exp * torch.cos(phase)
-                imag_new = sr_exp * torch.sin(phase)
+                complex_new = sr_exp * torch.exp(1j * phase)
+                saliency = torch.fft.ifft(complex_new, dim=1).abs()
+
+                # 6. Saliency Map
+                # Squared magnitude
+                rec_squared = saliency ** 2
                 
-                complex_new = torch.complex(real_new, imag_new)
-                saliency = torch.fft.ifft(complex_new, dim=1)
+                # Only take the part corresponding to the original window (before extension)
+                # And typically we want the last point's score for online detection
+                original_len = x.shape[1]
+                rec_squared = rec_squared[:, :original_len, :]
                 
-                # Reconstruction error (Saliency Map)
-                # (batch, window, features)
-                # We want the score for the last point in the window? 
-                # Or the average over the window? 
-                # SR usually highlights anomalies in the window. 
-                # Let's take the squared magnitude.
-                rec_squared = torch.abs(saliency)**2
-                
-                # For per-point score, we typically take the last point or average.
-                # Taking the mean over the window is robust.
-                batch_scores = torch.mean(rec_squared, dim=1) # (batch, features)
-                
+                # Use the max saliency across the window as the score.
+                # Last-point-only scoring misses anomalies not at the window end.
+                batch_scores = rec_squared.max(dim=1).values  # (batch, features)
+
                 results.append(batch_scores.cpu().numpy())
-                
+
         if not results:
             return np.array([])
-            
-        return np.concatenate(results, axis=0) # (n_samples, n_features)
 
-    def fit(self, train_data: pl.DataFrame):
+        return np.concatenate(results, axis=0)
+
+    def fit(self, train_data: pl.DataFrame) -> Result[None]:
         logger.info(f"Training SR model {self.name} (learning stats)...")
         
         saliency_map = self._compute_saliency(train_data)
         if len(saliency_map) == 0:
             logger.warning("SR produced empty saliency map during fit.")
-            return
+            return Ok(None)
 
         # Learn mean/std per feature
-        # saliency_map shape: (n_samples, n_features)
         n_features = saliency_map.shape[1]
-        
         self.stats = {}
         for i in range(n_features):
             col_scores = saliency_map[:, i]
             mean = float(np.mean(col_scores))
             std = float(np.std(col_scores))
-            if std == 0: std = 1e-6
+            if std < 1e-9:
+                std = 1e-9
             self.stats[i] = (mean, std)
-            
+
         logger.info(f"SR stats learned for {n_features} features.")
+        return Ok(None)
 
-    def save(self, path: str):
+    def predict(self, data: pl.DataFrame) -> Result[np.ndarray]:
+        saliency_map = self._compute_saliency(data)
+        if len(saliency_map) == 0:
+            return Ok(np.array([]))
+
+        n_features = saliency_map.shape[1]
+        norm_scores_list = []
+
+        for i in range(n_features):
+            mean, std = self.stats.get(i, (0.0, 1.0))
+            z = (saliency_map[:, i] - mean) / std
+            norm_scores_list.append(z)
+
+        # Average Z-score across features
+        norm_scores = np.stack(norm_scores_list, axis=1)
+        return Ok(np.mean(norm_scores, axis=1))
+
+    def get_contribution(self, data: pl.DataFrame) -> Result[np.ndarray]:
+        saliency_map = self._compute_saliency(data)
+        if len(saliency_map) == 0:
+            return Ok(np.array([]))
+
+        n_features = saliency_map.shape[1]
+        norm_scores_list = []
+
+        for i in range(n_features):
+            mean, std = self.stats.get(i, (0.0, 1.0))
+            z = (saliency_map[:, i] - mean) / std
+            norm_scores_list.append(z)
+
+        return Ok(np.stack(norm_scores_list, axis=1))
+
+    def save(self, path: str) -> Result[None]:
         import torch
-        state = {
-            "model": "SR",
-            "stats": self.stats
-        }
-        torch.save(state, path)
+        state = {"model": "SR", "stats": self.stats}
+        try:
+            torch.save(state, path)
+            return Ok(None)
+        except Exception as e:
+            return Err(ErrorCode.IO_WRITE_FAILED, str(e))
 
-    def load(self, path: str):
+    def load(self, path: str) -> Result[None]:
         import torch
         if not Path(path).exists():
-            raise FileNotFoundError(f"SR model file not found at {path}")
-        # PyTorch 2.6+ requires weights_only=False for loading dicts with numpy types
-        state = torch.load(path, map_location='cpu', weights_only=False)
-        self.stats = state.get("stats", {})
-
-    def predict(self, data: pl.DataFrame) -> np.ndarray:
-        saliency_map = self._compute_saliency(data)
-        if len(saliency_map) == 0:
-            return np.array([])
-            
-        # Normalize per feature
-        n_features = saliency_map.shape[1]
-        norm_scores_list = []
-        
-        for i in range(n_features):
-            mean, std = self.stats.get(i, (0.0, 1.0))
-            # Z-score
-            z = (saliency_map[:, i] - mean) / std
-            norm_scores_list.append(z)
-            
-        # Stack: (n_features, n_samples) -> (n_samples, n_features)
-        norm_scores = np.stack(norm_scores_list, axis=1)
-        
-        # Aggregate across features to get single anomaly score
-        # Mean Z-score across features
-        return np.mean(norm_scores, axis=1)
-
-    def get_contribution(self, data: pl.DataFrame) -> np.ndarray:
-        """
-        Returns normalized Z-scores per feature.
-        """
-        saliency_map = self._compute_saliency(data)
-        if len(saliency_map) == 0:
-            return np.array([])
-
-        n_features = saliency_map.shape[1]
-        norm_scores_list = []
-        
-        for i in range(n_features):
-            mean, std = self.stats.get(i, (0.0, 1.0))
-            z = (saliency_map[:, i] - mean) / std
-            norm_scores_list.append(z)
-            
-        return np.stack(norm_scores_list, axis=1)
+            return Err(ErrorCode.MODEL_NOT_FOUND)
+        try:
+            state = torch.load(path, map_location='cpu', weights_only=False)
+            self.stats = state.get("stats", {})
+            return Ok(None)
+        except Exception as e:
+            return Err(ErrorCode.IO_READ_FAILED, str(e))
